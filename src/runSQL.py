@@ -6,7 +6,7 @@ config = {
     'user': 'root',
     'password': 'password',
     'host': '34.79.29.158',
-    'database': 'relational',
+    'database': '',
     'raise_on_warnings': True
 }
 
@@ -15,14 +15,14 @@ cnx = mysql.connector.connect(**config)
 cursor = cnx.cursor()
 
 # Execute the SQL commands from the database.sql file
-with open('database.sql', 'r') as file:
+with open('1-database.sql', 'r') as file:
     sql_commands = file.read()
 
 for result in cursor.execute(sql_commands, multi=True):
     pass
 
 # Execute the SQL commands from the scripts.sql file
-with open('scripts.sql', 'r') as file:
+with open('2-scripts.sql', 'r') as file:
     sql_commands = file.read()
 
 for result in cursor.execute(sql_commands, multi=True):
