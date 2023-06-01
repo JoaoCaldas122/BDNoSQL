@@ -53,6 +53,67 @@ for user in users_data:
             'cart_items': cart_items
         }
         sessions.append(session_doc)
+
+    oracle_cursor.execute(f"SELECT * FROM order_details WHERE user_id = {user_id}")
+    orders_data = oracle_cursor.fetchall()
+
+    orders = []
+
+    for order in orders_data:
+        order_details_id = order[0]
+
+        order_items = []
+
+        oracle_cursor.execute(f"SELECT * FROM order_items WHERE ORDER_DETAILS_ID = {order_details_id}")
+        order_items_data = oracle_cursor.fetchall()
+
+        for item in order_items_data:
+            order_item_doc = {
+                'order_item_id': cart_item[0],
+                'product_id': cart_item[2],
+                'created_at': cart_item[3],
+                'modified_at': cart_item[4]
+            }
+            
+            order_items.append(order_item_doc)
+
+        oracle_cursor.execute(f"SELECT * FROM ADDRESSES WHERE adress_id = {order[5]}")
+        delivery_data = oracle_cursor.fetchall()[0]
+
+        delivery_doc = {
+            'line_1': delivery_data[1],
+            'line_2': delivery_data[2],
+            'city': delivery_data[3],
+            'zip_code': delivery_data[4],
+            'province': delivery_data[5],
+            'country': delivery_data[6]
+        }
+
+        oracle_cursor.execute(f"SELECT * FROM payment_details WHERE order_id = {order_details_id}")
+        payment = oracle_cursor.fetchall()[0]
+        payment_doc = {
+                'payment_id':payment[0],
+                'order_id':order_details_id,
+                'amount':payment[2],
+                'provider':payment[3],
+                'payment_status':payment[4],
+                'created_at':payment[5],
+                'modified_at':payment[6]
+            }
+
+        
+        order_doc = {
+            'order_details_id': order_details_id,
+            'total': order[2],
+            'payment': payment_doc,
+            'shipping_method': order[4],
+            'delivery_adress': delivery_doc,
+            'created_at': order[6],
+            'modified_at': order[7],
+            'order_items': order_items
+        }
+
+        orders.append(order_doc)
     
     # Create a user document
     user_doc = {
@@ -65,7 +126,8 @@ for user in users_data:
         'username': user[6],
         'user_password': user[7],
         'registered_at': user[8],
-        'sessions': sessions
+        'sessions': sessions,
+        'orders': orders
     }
     
     # Insert the user document into the users collection
@@ -244,4 +306,3 @@ oracle_conn.close()
 
 # Close the MongoDB client
 mongo_client.close()
-
