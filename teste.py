@@ -86,12 +86,15 @@ with neo4j_driver.session() as neo4j_session:
                 for product in products:
 
                     # Create a product node
+                    # Create a product node if it doesn't exist
                     neo4j_session.run(
-                        "CREATE (:Product {product_id: $product_id, product_name: $product_name, sku: $sku, "
-                        "price: $price, created_at: $created_at, last_modified: $last_modified})",
+                        "MERGE (p:Product {product_id: $product_id}) "
+                        "SET p.product_name = $product_name, p.sku = $sku, p.price = $price, "
+                        "p.created_at = $created_at, p.last_modified = $last_modified",
                         product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
                         created_at=product[6], last_modified=product[7]
-                    )           
+                    )
+        
                          
                     # Connect the order to the product with order item information
                     neo4j_session.run(
@@ -125,12 +128,15 @@ with neo4j_driver.session() as neo4j_session:
             )
 
             # Create a product node
+            # Create a product node if it doesn't exist
             neo4j_session.run(
-                "CREATE (:Product {product_id: $product_id, product_name: $product_name, sku: $sku, "
-                "price: $price, created_at: $created_at, last_modified: $last_modified})",
+                "MERGE (p:Product {product_id: $product_id}) "
+                "SET p.product_name = $product_name, p.sku = $sku, p.price = $price, "
+                "p.created_at = $created_at, p.last_modified = $last_modified",
                 product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
                 created_at=product[6], last_modified=product[7]
             )
+
 
             # Connect the product to its category
             neo4j_session.run(
