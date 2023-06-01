@@ -98,10 +98,18 @@ with neo4j_driver.session() as neo4j_session:
     for product in products_data:
         category_id = product[2]
         discount_id = product[5]
+
         
         # Fetch category information
         oracle_cursor.execute(f"SELECT * FROM product_categories WHERE category_id = {category_id}")
         category_data = oracle_cursor.fetchone()
+
+        # Create a category node
+        neo4j_session.run(
+            "CREATE (:Category {category_id: $category_id, category_name: $category_name})",
+            category_id=category_id,
+            category_name=category_data[1]
+        )
         
         # Create a product node
         neo4j_session.run(
