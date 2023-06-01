@@ -161,6 +161,12 @@ for product in products_data:
             discount_id=discount_id
         )
 
+# Migrate data from Oracle to Neo4j for address
+oracle_cursor.execute('SELECT * FROM product')
+products_data = oracle_cursor.fetchall()
+
+
+
 # Close the Oracle cursor and connection
 oracle_cursor.close()
 oracle_conn.close()
