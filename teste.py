@@ -2,7 +2,7 @@ import cx_Oracle
 from neo4j import GraphDatabase
 
 # Connect to Oracle
-oracle_conn = cx_Oracle.connect(user="uminho", password="uminho2020", dsn="localhost:1521/xe")
+oracle_conn = cx_Oracle.connect(user="store", password="pass", dsn="localhost:1521/xe")
 oracle_cursor = oracle_conn.cursor()
 
 # Connect to Neo4j
@@ -81,14 +81,27 @@ with neo4j_driver.session() as neo4j_session:
             for item in order_items_data:
                 product_id = item[2]
                 
-                # Create an order item node
-                neo4j_session.run(
-                    "MATCH (o:Order {order_details_id: $order_details_id}) "
-                    "CREATE (o)-[:HAS_ORDER_ITEM]->(:OrderItem {order_item_id: $order_item_id, "
-                    "product_id: $product_id, created_at: $created_at, modified_at: $modified_at})",
-                    order_details_id=order_details_id, order_item_id=item[0], product_id=product_id,
-                    created_at=item[3], modified_at=item[4]
-                )
+                oracle_cursor.execute(f"SELECT * FROM product WHERE product_id = {product_id}")
+                products = oracle_cursor.fetchall()
+                for product in products:
+
+                    # Create a product node
+                    neo4j_session.run(
+                        "CREATE (:Product {product_id: $product_id, product_name: $product_name, sku: $sku, "
+                        "price: $price, created_at: $created_at, last_modified: $last_modified})",
+                        product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
+                        created_at=product[6], last_modified=product[7]
+                    )           
+                         
+                    # Connect the order to the product with order item information
+                    neo4j_session.run(
+                        "MATCH (o:Order {order_details_id: $order_details_id}), "
+                        "(p:Product {product_id: $product_id}) "
+                        "CREATE (o)-[:HAS_PRODUCT]->(p) "
+                        "SET p.created_at = $created_at, p.modified_at = $modified_at",
+                        order_details_id=order_details_id, product_id=product_id,
+                        created_at=item[3], modified_at=item[4]
+                    )
     
 # Migrate data from Oracle to Neo4j for products
 oracle_cursor.execute('SELECT * FROM product')
@@ -102,29 +115,29 @@ with neo4j_driver.session() as neo4j_session:
         
         # Fetch category information
         oracle_cursor.execute(f"SELECT * FROM product_categories WHERE category_id = {category_id}")
-        category_data = oracle_cursor.fetchone()
+        categories = oracle_cursor.fetchall()
+        for category_data in categories:
+            # Create a category node
+            neo4j_session.run(
+                "CREATE (:Category {category_id: $category_id, category_name: $category_name})",
+                category_id=category_id,
+                category_name=category_data[1]
+            )
 
-        # Create a category node
-        neo4j_session.run(
-            "CREATE (:Category {category_id: $category_id, category_name: $category_name})",
-            category_id=category_id,
-            category_name=category_data[1]
-        )
-        
-        # Create a product node
-        neo4j_session.run(
-            "CREATE (:Product {product_id: $product_id, product_name: $product_name, sku: $sku, "
-            "price: $price, created_at: $created_at, last_modified: $last_modified})",
-            product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
-            created_at=product[6], last_modified=product[7]
-        )
-        
-        # Connect the product to its category
-        neo4j_session.run(
-            "MATCH (p:Product {product_id: $product_id}), (c:Category {category_id: $category_id}) "
-            "CREATE (p)-[:BELONGS_TO_CATEGORY]->(c)",
-            product_id=product[0], category_id=category_id
-        )
+            # Create a product node
+            neo4j_session.run(
+                "CREATE (:Product {product_id: $product_id, product_name: $product_name, sku: $sku, "
+                "price: $price, created_at: $created_at, last_modified: $last_modified})",
+                product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
+                created_at=product[6], last_modified=product[7]
+            )
+
+            # Connect the product to its category
+            neo4j_session.run(
+                "MATCH (p:Product {product_id: $product_id}), (c:Category {category_id: $category_id}) "
+                "CREATE (p)-[:BELONGS_TO_CATEGORY]->(c)",
+                product_id=product[0], category_id=category_id
+            )
         
         if discount_id is not None:
             # Fetch discount information
@@ -170,6 +183,16 @@ with neo4j_driver.session() as neo4j_session:
         # Fetch department information
         oracle_cursor.execute(f"SELECT * FROM departments WHERE department_id = {department_id}")
         department_data = oracle_cursor.fetchone()
+
+        # Create a department node
+        neo4j_session.run(
+            "CREATE (:Department {department_id: $department_id, department_name: $department_name ,"
+            "manager_id: $manager_id,department_desc: $department_desc})",
+            department_id=department_data[0],
+            department_name=department_data[1],
+            manager_id=department_data[2],
+            department_desc=department_data[3]
+        )
         
         # Create an employee node
         neo4j_session.run(
