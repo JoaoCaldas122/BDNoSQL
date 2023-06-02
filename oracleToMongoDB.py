@@ -69,10 +69,10 @@ for user in users_data:
 
         for item in order_items_data:
             order_item_doc = {
-                'order_item_id': cart_item[0],
-                'product_id': cart_item[2],
-                'created_at': cart_item[3],
-                'modified_at': cart_item[4]
+                'order_item_id': item[0],
+                'product_id': item[2],
+                'created_at': item[3],
+                'modified_at': item[4]
             }
             
             order_items.append(order_item_doc)
