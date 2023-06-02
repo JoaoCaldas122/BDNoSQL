@@ -2,7 +2,7 @@ import cx_Oracle
 from pymongo import MongoClient
 
 # Connect to Oracle
-oracle_conn = cx_Oracle.connect(user="uminho", password="uminho2020", dsn="localhost:1521/xe")
+oracle_conn = cx_Oracle.connect(user="store", password="pass", dsn="localhost:1521/xe")
 oracle_cursor = oracle_conn.cursor()
 
 url = 'Metam o link'
