@@ -48,44 +48,88 @@ with neo4j_driver.session() as neo4j_session:
             for cart_item in cart_items_data:
                 product_id = cart_item[2]
                 
+                neo4j_session.run(
+                    "MERGE (ci:Cart_Item {cart_item_id: $cart_item_id})"
+                    "SET ci.quantity= $quantity, ci.created_at= $created_at, ci.modified_at= $modified_at",
+                    cart_item_id=cart_item[0], quantity=cart_item[3],created_at=cart_item[4], modified_at=cart_item[5]
+                )
+
                 # Create a cart item node
                 neo4j_session.run(
-                    "MATCH (s:Session {session_id: $session_id}) "
-                    "CREATE (s)-[:HAS_CART_ITEM]->(:CartItem {product_id: $product_id, "
-                    "quantity: $quantity, created_at: $created_at, modified_at: $modified_at})",
-                    session_id=session_id, product_id=product_id, quantity=cart_item[3],
-                    created_at=cart_item[4], modified_at=cart_item[5]
+                    "MATCH (s:Session {session_id: $session_id}) ,"
+                    "(ci:Cart_Item{cart_item_id: $cart_item_id})"
+                    "CREATE (s)-[:HAS_CART_ITEM]->(ci)",
+                    session_id=session_id, cart_item_id=cart_item[0]
+                )
+
+                 
+                oracle_cursor.execute(f"SELECT * FROM product WHERE product_id = {cart_item[2]}")
+                product = oracle_cursor.fetchone()
+
+                neo4j_session.run(
+                    "MERGE (p:Product {product_id: $product_id}) "
+                    "SET p.product_name = $product_name, p.sku = $sku, p.price = $price, "
+                    "p.created_at = $created_at, p.last_modified = $last_modified",
+                    product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
+                    created_at=product[6], last_modified=product[7]
+                )
+
+                # Connect the order to the product with order item information
+                neo4j_session.run(
+                    "MATCH (ci:Cart_Item {cart_item_id: $cart_item_id}), "
+                    "(p:Product {product_id: $product_id}) "
+                    "CREATE (ci)-[:HAS_PRODUCT]->(p) ",
+                    cart_item_id=cart_item[0], product_id=product_id
                 )
         
         # Fetch orders for the user
         oracle_cursor.execute(f"SELECT * FROM order_details WHERE user_id = {user_id}")
         orders_data = oracle_cursor.fetchall()
         
-        for order in orders_data:
-            order_details_id = order[0]
+        for order_details in orders_data:
+            order_details_id = order_details[0]
             
-            # Create an order node
+            # Create an order details node
             neo4j_session.run(
-                "MATCH (u:User {user_id: $user_id}) "
-                "CREATE (u)-[:PLACED_ORDER]->(:Order {order_details_id: $order_details_id, "
-                "total: $total, shipping_method: $shipping_method, created_at: $created_at, "
-                "modified_at: $modified_at})",
-                user_id=user_id, order_details_id=order_details_id, total=order[2],
-                shipping_method=order[4], created_at=order[6], modified_at=order[7]
+                "MERGE (o:Order_Details {order_details_id: $order_details_id}) "
+                "SET o.created_at = $created_at, o.modified_at= $modified_at",
+                order_details_id=order_details_id, total=order_details[2], shipping_method=order_details[4], 
+                created_at=order_details[6], modified_at=order_details[7]
+            )
+
+            oracle_cursor.execute(f"SELECT * FROM addresses WHERE adress_id = {order_details[5]}")
+            address = oracle_cursor.fetchone()
+
+            #create adress node
+            neo4j_session.run(
+                "MERGE (a:Address {address_id: $address_id}) "
+                "SET a.line1= $line1, a.line2= $line2, a.city= $city,"
+                "a.zip_code= $zip_code, a.province= $province, a.country= $country",
+                address_id=address[0], line1=address[1], line2=address[2],
+                city=address[3],zip_code=address[4], province=address[5],country=address[6]
             )
             
+            #connect adress to order_details
+            neo4j_session.run(
+                "MATCH (od:Order_Details {order_details_id: $order_details_id}), "
+                "(a:Address {address_id: $address_id}) "
+                "CREATE (od)-[:HAS_ADDRESS]->(a) ",
+                order_details_id=order_details_id, address_id=address[0]
+            )
             # Fetch order items for the order
             oracle_cursor.execute(f"SELECT * FROM order_items WHERE ORDER_DETAILS_ID = {order_details_id}")
             order_items_data = oracle_cursor.fetchall()
             
-            for item in order_items_data:
-                product_id = item[2]
+            for order_item in order_items_data:
+                product_id = order_item[2]
                 
                 oracle_cursor.execute(f"SELECT * FROM product WHERE product_id = {product_id}")
                 products = oracle_cursor.fetchall()
+
+                
                 for product in products:
 
-                    # Create a product node
+                    
                     # Create a product node if it doesn't exist
                     neo4j_session.run(
                         "MERGE (p:Product {product_id: $product_id}) "
@@ -94,17 +138,52 @@ with neo4j_driver.session() as neo4j_session:
                         product_id=product[0], product_name=product[1], sku=product[3], price=product[4],
                         created_at=product[6], last_modified=product[7]
                     )
-        
-                         
+
+                    #create order_item
+                    neo4j_session.run(
+                        "MERGE (o:Order {order_item_id: $order_item_id}) "
+                        "SET o.created_at = $created_at, o.modified_at= $modified_at",
+                        order_item_id=order_item[0], created_at=order_item[3], modified_at=order_item[4]
+                    )
                     # Connect the order to the product with order item information
                     neo4j_session.run(
-                        "MATCH (o:Order {order_details_id: $order_details_id}), "
+                        "MATCH (o:Order {order_item_id: $order_item_id}), "
                         "(p:Product {product_id: $product_id}) "
-                        "CREATE (o)-[:HAS_PRODUCT]->(p) "
-                        "SET p.created_at = $created_at, p.modified_at = $modified_at",
-                        order_details_id=order_details_id, product_id=product_id,
-                        created_at=item[3], modified_at=item[4]
+                        "CREATE (o)-[:HAS_PRODUCT]->(p) ",
+                        order_item_id=order_item[0], product_id=product_id
                     )
+
+                    #Connect order_item to order_details
+                    neo4j_session.run(
+                        "MATCH (o:Order {order_item_id: $order_item_id}) ,"
+                        "(od:Order_Details {order_details_id: $order_details_id})"
+                        "MERGE (o)-[:HAS_DETAILS]->(od) ",    
+                        order_item_id=order_item[0], order_details_id=order_details_id
+                    )
+
+                    # Fetch payment details of order
+                    oracle_cursor.execute(f"SELECT * FROM payment_details WHERE order_id = {order_details_id}")
+                    payment_details = oracle_cursor.fetchall()
+                    
+                    for payment in payment_details:
+
+                        # Create payment details
+                        neo4j_session.run(
+                            "MERGE (p:Payment {payment_id: $payment_id}) "
+                            "SET p.amount= $amount, p.provider= $provider, p.status= $status, p.created_at= $created_at, p.modified_at= $modified_at",
+                            payment_id=payment[0], amount=payment[2], provider=payment[3], 
+                            status=payment[4], created_at=payment[5], modified_at=payment[6]
+                        )
+                        
+                        #connect payment to order_details
+                        neo4j_session.run(
+                            "MATCH (od:Order_Details {order_details_id: $order_details_id}) ,"
+                            "(p:Payment{payment_id: $payment_id})"
+                            "MERGE (od)-[:HAS_PAYMENT]->(p) ",
+                            order_details_id=order_details_id, payment_id=payment[0],
+                        )
+            
+            
     
 # Migrate data from Oracle to Neo4j for products
 oracle_cursor.execute('SELECT * FROM product')
