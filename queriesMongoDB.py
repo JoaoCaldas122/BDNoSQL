@@ -1,7 +1,7 @@
 from pymongo import MongoClient
 
 # Connect to MongoDB
-url = "mongodb+srv://thatch:SU4PfF4GPSHvSIO1@clusterleomessi.em0mhii.mongodb.net/?retryWrites=true&w=majority"
+url = "Acrescenta"
 
 mongo_client = MongoClient(url)
 mongo_db = mongo_client['tpnosql']
@@ -23,6 +23,11 @@ print("Tem ordens com valor superior a 1000")
 result = users_collection.find(query)
 for user in result:
     print(f'{user["first_name"]} {user["last_name"]}')
+    for order in user['orders']:
+        if order['total'] > 1000:
+            print(f'Order ID: {order["order_details_id"]}')
+            #print(f'Total: {order["total"]}')
+    print('===========')
 print('\n\n')
 
 print("Artigos com desconto ativo")
