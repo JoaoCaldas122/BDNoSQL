@@ -1,8 +1,6 @@
 1) Tem ordens com valor superior a 1000
 
-MATCH (u:User)-[o:ORDER]->()
-WHERE o.total > 1000
-RETURN u
+MATCH (o:Order_Details) WHERE o.total > 1000 RETURN o
 
 2) Todos os trabalhadores que trabalham no departamento 'Development'
 
@@ -14,7 +12,7 @@ RETURN e.first_name
 
 MATCH (p:Product)-[:BELONGS_TO_CATEGORY]->(c:Category)
 WHERE c.category_name = "TV and Video"
-MATCH (p)-[s:STOCK]->()
+MATCH (p)-[HAS_STOCK]->(s:Stock)
 WHERE s.quantity > 0
 RETURN p
 
