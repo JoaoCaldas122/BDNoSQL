@@ -92,7 +92,7 @@ with neo4j_driver.session() as neo4j_session:
             # Create an order details node
             neo4j_session.run(
                 "MERGE (o:Order_Details {order_details_id: $order_details_id}) "
-                "SET o.created_at = $created_at, o.modified_at= $modified_at",
+                "SET o.total= $total, o.shipping_method= $shipping_method,  o.created_at = $created_at, o.modified_at= $modified_at",
                 order_details_id=order_details_id, total=order_details[2], shipping_method=order_details[4], 
                 created_at=order_details[6], modified_at=order_details[7]
             )
