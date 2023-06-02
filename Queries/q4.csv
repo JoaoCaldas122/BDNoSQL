@@ -1,0 +1,10 @@
+﻿d
+"(:Discount {discount_desc: ""Weekly discount"",discount_name: ""Hits of the Week"",created_at: ""2022-03-10T02:27:51"",discount_percent: 15,is_active_status: ""Y"",discount_id: 1})"
+"(:Discount {discount_name: ""Hot Promotions"",created_at: ""2022-06-01T02:27:56"",modified_at: ""2022-07-14T02:28:38"",discount_percent: 25,is_active_status: ""Y"",discount_id: 3})"
+"(:Discount {discount_desc: ""Weekly discount"",discount_name: ""Hits of the Week"",created_at: ""2022-03-10T02:27:51"",discount_percent: 15,is_active_status: ""Y"",discount_id: 1})"
+"(:Discount {discount_name: ""Hot Promotions"",created_at: ""2022-06-01T02:27:56"",modified_at: ""2022-07-14T02:28:38"",discount_percent: 25,is_active_status: ""Y"",discount_id: 3})"
+"(:Discount {discount_name: ""Summer Sales"",created_at: ""2022-06-10T02:28:08"",discount_percent: 30,is_active_status: ""Y"",discount_id: 2})"
+"(:Discount {discount_desc: ""Weekly discount"",discount_name: ""Hits of the Week"",created_at: ""2022-03-10T02:27:51"",discount_percent: 15,is_active_status: ""Y"",discount_id: 1})"
+"(:Discount {discount_name: ""Summer Sales"",created_at: ""2022-06-10T02:28:08"",discount_percent: 30,is_active_status: ""Y"",discount_id: 2})"
+"(:Discount {discount_name: ""Summer Sales"",created_at: ""2022-06-10T02:28:08"",discount_percent: 30,is_active_status: ""Y"",discount_id: 2})"
+"(:Discount {discount_desc: ""Weekly discount"",discount_name: ""Hits of the Week"",created_at: ""2022-03-10T02:27:51"",discount_percent: 15,is_active_status: ""Y"",discount_id: 1})"

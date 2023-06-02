@@ -113,7 +113,7 @@ with neo4j_driver.session() as neo4j_session:
             neo4j_session.run(
                 "MATCH (od:Order_Details {order_details_id: $order_details_id}), "
                 "(a:Address {address_id: $address_id}) "
-                "CREATE (od)-[:HAS_ADDRESS]->(a) ",
+                "MERGE (od)-[:HAS_ADDRESS]->(a) ",
                 order_details_id=order_details_id, address_id=address[0]
             )
             # Fetch order items for the order
@@ -201,7 +201,7 @@ with neo4j_driver.session() as neo4j_session:
         for category_data in categories:
             # Create a category node
             neo4j_session.run(
-                "CREATE (:Category {category_id: $category_id, category_name: $category_name})",
+                "MERGE (:Category {category_id: $category_id, category_name: $category_name})",
                 category_id=category_id,
                 category_name=category_data[1]
             )
@@ -220,7 +220,7 @@ with neo4j_driver.session() as neo4j_session:
             # Connect the product to its category
             neo4j_session.run(
                 "MATCH (p:Product {product_id: $product_id}), (c:Category {category_id: $category_id}) "
-                "CREATE (p)-[:BELONGS_TO_CATEGORY]->(c)",
+                "MERGE (p)-[:BELONGS_TO_CATEGORY]->(c)",
                 product_id=product[0], category_id=category_id
             )
         
@@ -271,7 +271,7 @@ with neo4j_driver.session() as neo4j_session:
 
         # Create a department node
         neo4j_session.run(
-            "CREATE (:Department {department_id: $department_id, department_name: $department_name ,"
+            "MERGE (:Department {department_id: $department_id, department_name: $department_name ,"
             "manager_id: $manager_id,department_desc: $department_desc})",
             department_id=department_data[0],
             department_name=department_data[1],
@@ -294,7 +294,7 @@ with neo4j_driver.session() as neo4j_session:
         neo4j_session.run(
             "MATCH (e:Employee {employee_id: $employee_id}), "
             "(d:Department {department_id: $department_id}) "
-            "CREATE (e)-[:BELONGS_TO_DEPARTMENT]->(d)",
+            "MERGE (e)-[:BELONGS_TO_DEPARTMENT]->(d)",
             employee_id=employee[0], department_id=department_id
         )
         
@@ -303,7 +303,7 @@ with neo4j_driver.session() as neo4j_session:
             neo4j_session.run(
                 "MATCH (e:Employee {employee_id: $employee_id}), "
                 "(m:Employee {employee_id: $manager_id}) "
-                "CREATE (e)-[:REPORTS_TO]->(m)",
+                "MERGE (e)-[:REPORTS_TO]->(m)",
                 employee_id=employee[0], manager_id=manager_id
             )
         
