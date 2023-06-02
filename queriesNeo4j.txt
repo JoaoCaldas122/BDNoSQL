@@ -1,0 +1,33 @@
+1) Tem ordens com valor superior a 1000
+
+MATCH (u:User)-[o:ORDER]->()
+WHERE o.total > 1000
+RETURN u
+
+2) Todos os trabalhadores que trabalham no departamento 'Development'
+
+MATCH (d:Department)<-[:BELONGS_TO_DEPARTMENT]-(e:Employee)
+WHERE d.department_name = 'Development'
+RETURN e.first_name
+
+3) Produtos com stock > 0 na categoria 'TV and Video'
+
+MATCH (p:Product)-[:BELONGS_TO_CATEGORY]->(c:Category)
+WHERE c.category_name = "TV and Video"
+MATCH (p)-[s:STOCK]->()
+WHERE s.quantity > 0
+RETURN p
+
+4) Artigos com desconto ativo
+
+MATCH (d:Discount)
+WHERE d.is_active_status = 'Y'
+RETURN d
+
+5) Recuperar todos os usuários que fizeram uma compra nos últimos 365 dias
+
+WITH datetime() AS reference_date
+WITH reference_date - duration('P365D') AS start_date
+MATCH (s:Session)
+WHERE s.created_at >= start_date
+RETURN s
